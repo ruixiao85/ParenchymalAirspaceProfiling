@@ -1,0 +1,5 @@
+bin/
+obj/
+Resources/
+db.lock
+storage.*

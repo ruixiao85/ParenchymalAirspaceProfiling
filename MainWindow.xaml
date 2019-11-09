@@ -1,0 +1,812 @@
+﻿<Window x:Class="LungMorphApp.UserWindow"
+				xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+				xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+				xmlns:avalonDock="http://schemas.xceed.com/wpf/xaml/avalondock"
+				xmlns:xt="http://schemas.xceed.com/wpf/xaml/toolkit"
+				xmlns:op="http://oxyplot.org/wpf"
+				xmlns:local="clr-namespace:LungMorphApp"        
+				Title="Lung Morphometric Analysis" Width="1280" Height="800" WindowStartupLocation="CenterScreen"			
+				Icon="ColorStripes.ico" KeyDown="Window_KeyDown" Loaded="Window_Loaded">
+
+	<Window.TaskbarItemInfo>
+		<TaskbarItemInfo ProgressValue="{Binding Progress, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"/>
+	</Window.TaskbarItemInfo>
+
+	<Window.Resources>
+		<local:InverseBooleanConverter x:Key="InverseBoolean"/>
+		<Style TargetType="StackPanel">
+			<Setter Property="Margin" Value="0,1"/>
+		</Style>
+		<Style TargetType="TabControl">
+			<Setter Property="Width" Value="386"/>
+		</Style>
+		<Style TargetType="TabItem">
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="TabItem">
+						<Border Name="Border" BorderThickness="1,1,1,0" BorderBrush="Gainsboro" CornerRadius="4,4,0,0" Margin="2,0">
+							<ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="10,2"/>
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsSelected" Value="True">
+								<Setter TargetName="Border" Property="Background" Value="#FFC1DDEE" />
+							</Trigger>
+							<Trigger Property="IsSelected" Value="False">
+								<Setter TargetName="Border" Property="Background" Value="GhostWhite" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+		<Style TargetType="GroupBox">
+			<Setter Property="BorderBrush" Value="#FFB1CDDE"/>
+			<Setter Property="BorderThickness" Value="1.8"/>
+			<Setter Property="Margin" Value="0,0.5,0,0"/>
+		</Style>
+		<Style TargetType="RadioButton">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontWeight" Value="DemiBold"/>
+			<Setter Property="Foreground" Value="Green"/>
+			<Setter Property="Margin" Value="3,4,0,0"/>
+		</Style>
+		<Style TargetType="Button">
+			<Setter Property="Background" Value="#88FFE3E1"/>
+			<Setter Property="Padding" Value="3"/>
+			<Setter Property="Margin" Value="2"/>
+			<Setter Property="Width" Value="69"/>
+			<Setter Property="Height" Value="55"/>
+		</Style>
+		<Style TargetType="Image">
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}, AncestorLevel=1}, Path=IsEnabled}" Value="False">
+					<Setter Property="Image.Opacity" Value="0.45"/>
+				</DataTrigger>
+			</Style.Triggers>
+			<Setter Property="Opacity" Value="0.85"/>
+		</Style>
+		<Style TargetType="TextBlock">
+			<Style.Resources>
+				<DropShadowEffect x:Key="dropShadowEffect" ShadowDepth="1" Color="LightYellow" BlurRadius="7"/>
+				<OuterGlowBitmapEffect x:Key="outerGlowEffect" GlowColor="White" GlowSize="25" Noise="0.5"/>
+			</Style.Resources>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type Button}, AncestorLevel=1}, Path=IsEnabled}" Value="True">
+					<Setter Property="Effect" Value="{StaticResource dropShadowEffect}"/>
+					<!--<Setter Property="BitmapEffect" Value="{StaticResource outerGlowEffect}"/>-->
+				</DataTrigger>
+			</Style.Triggers>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="FontWeight" Value="DemiBold"/>
+		</Style>
+		<Style TargetType="Label">
+			<Setter Property="Height" Value="25"/>
+			<Setter Property="Width" Value="108"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style TargetType="CheckBox">
+			<Setter Property="Foreground" Value="DarkOrchid"/>
+			<Setter Property="Margin" Value="7,0,1,0"/>
+			<Setter Property="Width" Value="100"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style TargetType="ComboBox">
+			<Setter Property="Margin" Value="4"/>
+			<Setter Property="Padding" Value="8,4.5"/>
+			<Setter Property="Background" Value="#88FFE3E1"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style TargetType="ComboBoxItem">
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="Padding" Value="2"/>
+		</Style>
+		<Style TargetType="TextBox">
+			<Setter Property="Height" Value="24"/>
+			<Setter Property="Width" Value="84"/>
+			<Setter Property="Padding" Value="7,2"/>
+			<Style.Triggers>
+				<DataTrigger Binding="{Binding IsReadOnly, RelativeSource={RelativeSource Self}}" Value="True">
+					<Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.InfoBrushKey}}"/>
+				</DataTrigger>
+			</Style.Triggers>
+		</Style>
+		<Style TargetType="PasswordBox">
+			<Setter Property="Height" Value="24"/>
+			<Setter Property="Width" Value="84"/>
+		</Style>
+		<Style TargetType="xt:IntegerUpDown">
+			<Setter Property="Minimum" Value="0"/>
+			<Setter Property="Height" Value="24"/>
+			<Setter Property="Width" Value="84"/>
+			<Setter Property="Padding" Value="7,2"/>
+		</Style>
+		<Style TargetType="xt:DoubleUpDown">
+			<Setter Property="Minimum" Value="0"/>
+			<Setter Property="FormatString" Value="F3"/>
+			<Setter Property="Increment" Value="0.1"/>
+			<Setter Property="Height" Value="24"/>
+			<Setter Property="Width" Value="84"/>
+			<Setter Property="Padding" Value="7,2"/>
+		</Style>
+		<Style TargetType="xt:DropDownButton">
+			<Setter Property="Background" Value="AliceBlue"/>
+			<Setter Property="Height" Value="20"/>
+			<Setter Property="Width" Value="30"/>
+		</Style>
+	</Window.Resources>
+
+	<Grid Margin="0,0,0,0">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="24"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="24"/>
+		</Grid.RowDefinitions>
+		<Menu Grid.Row="0">
+			<MenuItem Header=" _File ">
+				 <MenuItem x:Name="loadstartup" Header="Load@Startup" IsChecked="{Binding LoadStartup, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsCheckable="True"/>
+				<MenuItem Header="Quick Load" Click="Menu_File_QuickLoad_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Load.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Quick Save" Click="Menu_File_QuickSave_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Save.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Save &amp; Exit" Click="Menu_File_Exit_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Exit.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Exit" Click="Menu_File_Exit_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Exit.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+			</MenuItem>
+			<MenuItem Header=" _Setting" x:Name="Uset" Click="Menu_Generate">
+				<MenuItem Header="Save Setting..." Click="Menu_Setting_Save">
+					<TextBox x:Name="Umss" Text="" Width="150" Padding="0,0" Margin="0,0"/>
+				</MenuItem>
+				<MenuItem Header="Load Setting..." Click="Menu_Setting_Load"/>
+				<Separator/>
+			</MenuItem>
+			<MenuItem Header=" _Layout " x:Name="Ulyt" Click="Menu_Generate">
+				<MenuItem Header="Save" Click="Menu_Layout_Save"/>
+				<MenuItem Header="Load" Click="Menu_Layout_Load"/>
+				<Separator/>
+			</MenuItem>
+			<MenuItem Header=" _Theme ">
+				<MenuItem Header="Aero" x:Name="Utma" Click="Menu_Theme_Change">
+					<MenuItem.Icon>
+						<Image Source="Resources/Check.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Generic" x:Name="Utmg" Click="Menu_Theme_Change"/>
+				<MenuItem Header="Metro" x:Name="Utmm" Click="Menu_Theme_Change"/>
+				<MenuItem Header="VS2010" x:Name="Utmv" Click="Menu_Theme_Change"/>
+			</MenuItem>
+			<MenuItem Header=" _Help ">
+				<MenuItem Header="About" Click="Menu_Help_About_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Info.png"/>
+					</MenuItem.Icon>
+				</MenuItem>
+				<MenuItem Header="Check for updates" Click="Menu_Help_Update_Click">
+					<MenuItem.Icon>
+						<Image Source="Resources/Info.png"/>
+					</MenuItem.Icon>
+				</MenuItem>				
+			</MenuItem>
+		</Menu>
+
+		<avalonDock:DockingManager x:Name="Dock" Grid.Row="1">
+			<avalonDock:DockingManager.Theme>
+				<avalonDock:AeroTheme/>
+			</avalonDock:DockingManager.Theme>
+			<avalonDock:LayoutRoot>
+				<avalonDock:LayoutPanel Orientation="Horizontal">
+					<avalonDock:LayoutAnchorablePaneGroup Orientation="Vertical" DockMinWidth="400" DockWidth="400">
+						<avalonDock:LayoutAnchorablePane DockHeight="1.4*">
+							<avalonDock:LayoutAnchorable Title="General Settings" CanClose="False" CanHide="False" ContentId="generalsettings">
+								<Border>
+									<Border.Background>
+										<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+									</Border.Background>
+									<WrapPanel HorizontalAlignment="Left" Margin="0,2,0,0">
+										<StackPanel Orientation="Horizontal" ToolTip="Results will be saved in a subfolder with this name">
+											<Label Content="Project Name"/>
+											<TextBox x:Name="Upr" Text="{Binding ProjectName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+                                        <StackPanel Orientation="Horizontal" ToolTip="Input the actual dimension (px/µm, a unit length of 1µm is equivalent to how many pixels on your original image. This is essential for getting accurate results.">
+											<Label Content="Pixel Scale"/>
+											<xt:DoubleUpDown x:Name="Ups" Text="{Binding PixelScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="1: use original resolution without resizing. 0-1: you can downsize the image prior to analyzing large image to avoid extra burden on your computer.">
+											<CheckBox x:Name="sw_RR" Foreground="Crimson" Content="Resize Ratio" IsChecked="{Binding ResizeRatioSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DoubleUpDown x:Name="Urr" Text="{Binding ResizeRatio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Increment="0.01" Minimum="0" Maximum="1"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="1: use entire image without cropping. 0-1: you can also analyze or test-run the center portion of the images.">
+											<CheckBox x:Name="sw_CR" Foreground="Crimson" Content="Crop Ratio" IsChecked="{Binding CropRatioSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DoubleUpDown x:Name="Ucr" Text="{Binding CropRatio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Increment="0.01" Minimum="0" Maximum="1"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Darkest area in each channel (0%-100%) will be adjusted to black.">
+											<CheckBox x:Name="sw_BB" Foreground="Crimson" Content="Black Level" IsChecked="{Binding BlackBalanceSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DoubleUpDown x:Name="Ubb" Text="{Binding BlackBalance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Increment="0.01" Minimum="0" Maximum="1"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Brightest area in each channel (0%-100%) will be adjusted to white.">
+											<CheckBox x:Name="sw_WB" Foreground="Crimson" Content="White Balance" IsChecked="{Binding WhiteBalanceSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DoubleUpDown x:Name="Uwb" Text="{Binding WhiteBalance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Increment="0.01" Minimum="0" Maximum="1"/>
+										</StackPanel>
+                                        <StackPanel Orientation="Horizontal" ToolTip="Rotate Image by certain degrees (90, 180, 270) for different sampling orientation or aspect ratio.">
+                                            <CheckBox x:Name="sw_RI" Foreground="Crimson" Content="Rotate Image  " IsChecked="{Binding RotateImageSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                            <xt:IntegerUpDown x:Name="Uri" Text="{Binding RotateImage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        </StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Gaussian Blur will smooth the original image. This specifies how far this smooth effect will expand to.">
+											<CheckBox x:Name="sw_GB" Foreground="Crimson" Content="Gaussian Blur  " IsChecked="{Binding GaussianBlurSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:IntegerUpDown x:Name="Ugb" Text="{Binding GaussianBlur, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+                                        <StackPanel Orientation="Horizontal" ToolTip="If you painted the non-parenchymal region with a distinct color, you can use this drop-down color picker to select that.">
+											<CheckBox x:Name="sw_EC" Width="154" Foreground="Crimson" Content="Exclude Area by Color   " IsChecked="{Binding ExcludeColorSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DropDownButton Content="...">
+												<xt:DropDownButton.DropDownContent>
+													<xt:ColorCanvas x:Name="cp_EC" HexadecimalString="{Binding ExcludeColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+												</xt:DropDownButton.DropDownContent>
+											</xt:DropDownButton>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal">
+											<Label x:Name="Ucn" Foreground="{Binding ExcludeColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+												<Underline>Color</Underline>
+											</Label>
+											<TextBox Visibility="Hidden"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Color Hex code. If you are not sure, use the color-picker on the right size of 'Exclude Area by Color'">
+											<Label Content="    Color Hexcode"/>
+											<TextBox x:Name="Uech" Text="{Binding ExcludeColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="How much color difference will be torleranted in the color selection. Default=100">
+											<Label Content="  Color Radius"/>
+											<xt:IntegerUpDown x:Name="Uecr" Text="{Binding ExcludeColorRadius, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Increment="10"/>
+										</StackPanel>
+										<!--<StackPanel Orientation="Horizontal" ToolTip="If images from your device consistently shows light fall-off or certain blemishes, you can take a blank/background shot and use that to do background adjustment here.">
+											<CheckBox x:Name="sw_BG" Width="154" Content="Background Adjustment" IsChecked="{Binding BackgroundSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											<xt:DropDownButton Content="..." Click="btn_Background_Click"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="If images from your device consistently shows light fall-off or certain blemishes, you can take a blank/background shot and use that to do background adjustment here.">
+											<TextBox x:Name="txt_BG" Text="{Binding Background, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Width="376" Margin="8,0,0,0"/>
+										</StackPanel>-->
+									</WrapPanel>
+								</Border>
+							</avalonDock:LayoutAnchorable>
+						</avalonDock:LayoutAnchorablePane>
+
+						<avalonDock:LayoutAnchorablePane DockHeight="1.25*">
+							<avalonDock:LayoutAnchorable Title="Binarization Settings" CanClose="False" CanHide="False" ContentId="binarizationsettings">
+								<Border>
+									<Border.Background>
+										<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+									</Border.Background>
+									<WrapPanel>
+										<TabControl x:Name="sw_TS" Margin="0,2" BorderBrush="Gainsboro" Background="AliceBlue" SelectedIndex="{Binding ThresholdIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+											<TabItem ToolTip="Apply the same threshold across the entire image">
+												<TabItem.Header>
+													<StackPanel Orientation="Horizontal">
+														<TextBlock Text="Global Thresholding" Foreground="DarkOrchid"/>
+													</StackPanel>
+												</TabItem.Header>
+												<StackPanel Orientation="Horizontal">
+													<StackPanel Orientation="Horizontal" ToolTip="Absolute Threshold (0-255, threshold at certain brightness value)">
+														<RadioButton GroupName="GlobalThresholdSel" Width="83" x:Name="gta" Foreground="DarkSlateGray" Content="Absolute" Margin="20,0,0,0" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" IsChecked="{Binding Path=ThreshGlobalIsAbsolute, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+														<xt:IntegerUpDown x:Name="Uta" Text="{Binding Path=ThreshGlobalAbsolute, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="255"/>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal" ToolTip="Relative Threshold (0-255, (x/255)%, threshold at certain percentile)">
+														<RadioButton GroupName="GlobalThresholdSel" Width="88" x:Name="gtr" Foreground="DarkSlateGray" Content="Relative" Margin="20,0,0,0" IsChecked="{Binding Path=ThreshGlobalIsAbsolute, Converter={StaticResource InverseBoolean}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Left" VerticalContentAlignment="Center"/>
+														<xt:IntegerUpDown x:Name="Utr" Text="{Binding Path=ThreshGlobalRelative, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Minimum="0" Maximum="255"/>
+													</StackPanel>
+												</StackPanel>
+											</TabItem>
+											<TabItem  ToolTip="Compare pixel brightness differences in a moving window to distinguish white and black pixels.">
+												<TabItem.Header>
+													<StackPanel Orientation="Horizontal">
+														<TextBlock Text="Local Thresholding" Foreground="Crimson" />
+													</StackPanel>
+												</TabItem.Header>
+												<StackPanel Orientation="Horizontal">
+													<StackPanel Orientation="Horizontal" ToolTip="Bradley local thresholding: pixel brightness difference limits">
+														<Label Content="Brightness Difference" Width="104"/>
+														<xt:DoubleUpDown x:Name="Ubd" Text="{Binding Path=ThreshLocalBrightnessDifference, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal" ToolTip="Bradley local thresholding: window size">
+														<Label Content="Window Size" Width="107"/>
+														<xt:IntegerUpDown x:Name="Uws" Text="{Binding Path=ThreshLocalWindowSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+													</StackPanel>
+												</StackPanel>
+											</TabItem>
+										</TabControl>
+										<StackPanel Orientation="Horizontal" ToolTip="Fill holes in airspace: max size (px).">
+											<CheckBox x:Name="sw_FHA" Content="Fill 'o' in Air" IsChecked="{Binding Path=FillHoleAirspaceSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+											<xt:IntegerUpDown x:Name="Ufha" Text="{Binding Path=FillHoleAirspace, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Fill holes in tissue: max size (px).">
+											<CheckBox x:Name="sw_FHT" Content="Fill 'o' in Tissue" IsChecked="{Binding Path=FillHoleTissueSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+											<xt:IntegerUpDown x:Name="Ufht" Text="{Binding Path=FillHoleTissue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Morphological operation: Dilate (px).">
+											<CheckBox x:Name="sw_MD" Content="Morph Dilate" IsChecked="{Binding Path=MorphoDilateSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+											<xt:IntegerUpDown x:Name="Umd" Text="{Binding Path=MorphoDilate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Morphological operation: Erosion (px).">
+											<CheckBox x:Name="sw_ME" Content="Morph Erode" IsChecked="{Binding Path=MorphoErodeSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+											<xt:IntegerUpDown x:Name="Ume" Text="{Binding Path=MorphoErode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Minimum Size (&gt;log10µm^2)">
+												<CheckBox x:Name="sw_BMin" Content="Minimum Size" IsChecked="{Binding Path=BlobMinSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+												<xt:DoubleUpDown x:Name="Ubmin" Text="{Binding Path=BlobMin, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+											<StackPanel Orientation="Horizontal" ToolTip="Maximum Size (&lt;log10µm^2)">
+												<CheckBox x:Name="sw_BMax" Content="Maximum Size" IsChecked="{Binding Path=BlobMaxSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" Foreground="DarkSlateGray"/>
+												<xt:DoubleUpDown x:Name="Ubmax" Text="{Binding Path=BlobMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+											</StackPanel>
+									</WrapPanel>
+								</Border>
+							</avalonDock:LayoutAnchorable>
+						</avalonDock:LayoutAnchorablePane>
+
+						<!--<avalonDock:LayoutAnchorablePane DockHeight="*">
+							<avalonDock:LayoutAnchorable Title="Gridline Counting Settings" CanClose="False" CanHide="True" ContentId="gridcountsettings">
+								<Border>
+									<Border.Background>
+										<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+									</Border.Background>
+									<WrapPanel DockPanel.Dock="Top">
+										<StackPanel Orientation="Horizontal" ToolTip="Height Offset (+/-px)">
+											<Label Content="Height Offset"/>
+											<xt:IntegerUpDown x:Name="Uho" Text="{Binding Path=HorizontalOffset, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Endpoint Width (px)">
+											<Label Content="Endpoint Width"/>
+											<xt:IntegerUpDown x:Name="Uew" Text="{Binding Path=EndpointWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Horizontal Segment (px)">
+											<Label Content="Horizontal Segment"/>
+											<xt:IntegerUpDown x:Name="Uhs" Text="{Binding Path=HorizontalSegment, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Total # of Lines, can be autofilled by selecting a grid.">
+											<Label Content="Total # of Lines"/>
+											<TextBox x:Name="Utl" HorizontalContentAlignment="Right" Text="{Binding Path=TotalLines, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Padding="0,0,24,0" IsReadOnly="True"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal" ToolTip="Select the desired grid to perform the grid-line counting.">
+											<Label Content=" Grid Selection"/>
+											<TextBox Visibility="Hidden"/>
+										</StackPanel>
+										<StackPanel Orientation="Horizontal">
+											<ComboBox x:Name="cmb_GD" Width="193" SelectedIndex="{Binding Path=GridIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+												<ComboBoxItem>Not Selected</ComboBoxItem>
+												<ComboBoxItem>Grid #16: 4 x 4</ComboBoxItem>
+												<ComboBoxItem>Grid #32: 8 x 4</ComboBoxItem>
+												<ComboBoxItem IsSelected="True">Grid #16: 8 x 2</ComboBoxItem>
+												<ComboBoxItem>Grid #128 16 x 8 </ComboBoxItem>
+											</ComboBox>
+										</StackPanel>
+									</WrapPanel>
+								</Border>
+							</avalonDock:LayoutAnchorable>
+						</avalonDock:LayoutAnchorablePane>-->
+						<avalonDock:LayoutAnchorablePane DockHeight="*">
+							<avalonDock:LayoutAnchorable Title="Airspace Profiling Settings" CanClose="False" CanHide="False" ContentId="airspaceprofilingsettings">
+								<Border>
+									<Border.Background>
+										<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+									</Border.Background>
+									<WrapPanel>
+										<TabControl x:Name="sw_APC" Margin="0,2" BorderBrush="Gainsboro" Background="AliceBlue" SelectionChanged="sw_APC_Changed" SelectedIndex="{Binding Path=CutoffSelection, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+											<TabItem ToolTip="Perform Airspace Profiling and Quantification">
+												<TabItem.Header>
+													<StackPanel Orientation="Horizontal">
+														<TextBlock Text="Automatic Cutoff" Foreground="DarkOrchid"/>
+													</StackPanel>
+												</TabItem.Header>
+												<StackPanel Orientation="Horizontal">
+													<ComboBox x:Name="cmb_AC" DockPanel.Dock="Top" Width="211" SelectedIndex="{Binding Path=ProfilingIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+														<ComboBoxItem>With all selected</ComboBoxItem>
+														<ComboBoxItem>By Group (1st level subfolder)</ComboBoxItem>
+														<ComboBoxItem>By Individual (2nd level subfolder)</ComboBoxItem>
+														<ComboBoxItem>For each file (only for large image)</ComboBoxItem>
+													</ComboBox>
+												</StackPanel>
+											</TabItem>
+											<TabItem ToolTip="Perform Custom Quantification">
+												<TabItem.Header>
+													<StackPanel Orientation="Horizontal">
+														<TextBlock Text="Custom Cutoff" Foreground="Crimson" />
+													</StackPanel>
+												</TabItem.Header>
+												<StackPanel Orientation="Horizontal">
+													<StackPanel Orientation="Horizontal" ToolTip="Cutoff between alveolus and sac (&lt;log10µm^2)">
+														<Label Content="Saccular Threshold" Width="104"/>
+														<xt:DoubleUpDown x:Name="Ust" Text="{Binding Path=BlobAlv, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal">
+														<Label Content="Ductal/Destructive Threshold" Width="107" ToolTip="Cutoff between sac and duct/destruction (&gt;log10µm^2)" />
+														<xt:DoubleUpDown x:Name="Udt" Text="{Binding Path=BlobDes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+													</StackPanel>
+												</StackPanel>
+											</TabItem>
+										</TabControl>
+										<WrapPanel>											
+											<StackPanel Orientation="Horizontal" ToolTip="Perform quantification with 1-dist or 2-dist categorization">
+												<RadioButton x:Name="categ1dist" Content="1-Dist Categorization" ToolTip="Only used if there are limited sampling of the large airspaces" IsChecked="{Binding Path=Categ1Dist, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+												<RadioButton x:Name="categ2dist" Content="2-Dist Categorization" ToolTip="Generally recommended" IsChecked="{Binding Path=Categ2Dist, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />																		 
+											</StackPanel>										
+										</WrapPanel>
+									</WrapPanel>
+								</Border>
+							</avalonDock:LayoutAnchorable>
+						</avalonDock:LayoutAnchorablePane>
+					</avalonDock:LayoutAnchorablePaneGroup>
+
+					<avalonDock:LayoutAnchorablePaneGroup Orientation="Vertical" DockMinWidth="400" DockWidth="420">
+
+						<avalonDock:LayoutAnchorablePaneGroup DockHeight="2.5*" Orientation="Horizontal">
+							<!--<avalonDock:LayoutAnchorablePane DockWidth="*">
+								<avalonDock:LayoutAnchorable Title="File Explorer" CanClose="False" CanHide="False" ContentId="fileexplorer">
+									<Border>
+										<Border.Background>
+											<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+										</Border.Background>
+										<local:FileExplorer x:Name="myFileExplorer" MouseRightButtonUp="FileExplorer2WorkDirectory" ToolTip="Find your work directory&#x0a; Left-click: select your desired directory&#x0a; Right-click: set directory and scan images"/>
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>-->
+							<avalonDock:LayoutAnchorablePane DockWidth="2.6*">
+								<avalonDock:LayoutAnchorable Title="List (Group\Individual\(Slide)\.)" CanHide="False" ContentId="list">
+									<Border>
+										<Border.Background>
+											<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+										</Border.Background>
+										<DockPanel LastChildFill="True">
+											<StackPanel DockPanel.Dock="Top">
+												<DockPanel LastChildFill="True" Height="34" AllowDrop="True" Drop="Urt_Drop" PreviewDragOver="Urt_pDrop" ToolTip="Drag a file/folder from your work directory to this area will update this field.">
+													<Button Height="26" Width="112" Padding="0" DockPanel.Dock="left" Click="btn_WorkDirectory_Click">
+														<StackPanel Orientation="Horizontal">
+															<Image Width="15" Height="15" Margin="1,0,3,0" Source="Resources/open-file.png"/>
+															<TextBlock FontWeight="Normal" Text="Work Directory"/>
+														</StackPanel>
+													</Button>
+													<TextBox Name="Urt" Text="{Binding Path=WorkDirectory, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" Margin="1,0,2,0" Width="Auto"/>
+												</DockPanel>
+												<WrapPanel>
+													<StackPanel Orientation="Horizontal">
+														<CheckBox x:Name="ListFilter_Type" Content="File Type" Width="72" IsChecked="{Binding ListTypeSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter by image file type."/>
+														<xt:ButtonSpinner Spin="FileTypeSpin" Margin="0" Width="59">
+															<TextBox x:Name="Uft" Text="{Binding ListType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" ToolTip="Avoid png/jpe files, because analysis output may be in those formats."/>
+														</xt:ButtonSpinner>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal">
+														<CheckBox x:Name="ListFilter_Folder" Content="Sub-Folder ≥" Width="89" IsChecked="{Binding ListSubFolderSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter by folder structure."/>
+														<xt:IntegerUpDown x:Name="Usf" Width="59" Text="{Binding ListSubFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Levels of sub-folders"/>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal">
+														<CheckBox x:Name="ListFilter_Size" Content="Image Size     " IsChecked="{Binding ListSizeSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Filter by image size."/>
+														<xt:IntegerUpDown x:Name="Uwd" Text="{Binding ListSizeWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Watermark="Width" ToolTip="Image Width (px)"/>
+														<TextBlock Text="  x  " FontWeight="Normal"/>
+														<xt:IntegerUpDown x:Name="Uht" Text="{Binding ListSizeHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Watermark="Height" ToolTip="Image Height (px)"/>
+													</StackPanel>
+													<StackPanel Orientation="Horizontal">
+														<Button x:Name="lst_Scan" Click="List_Scan" Focusable="True">
+															<Grid>
+																<Image Source="Resources/simplicio/file_search.png"/>
+																<TextBlock Text="Scan"/>
+															</Grid>
+														</Button>
+														<Button x:Name="lst_Stop" IsEnabled="False" Click="List_Stop" Focusable="True">
+														<Grid>
+															<Image Source="Resources/simplicio/player_stop.png"/>
+															<TextBlock Text="Stop"/>
+														</Grid>
+													</Button>
+														<Button Click="List_Remove" Focusable="True">
+															<Grid>
+																<Image Source="Resources/simplicio/file_warning.png"/>
+																<TextBlock Text="Remove"/>
+															</Grid>
+														</Button>
+														<Button Click="List_Clear" Focusable="True">
+															<Grid>
+																<Image Source="Resources/simplicio/file_delete.png"/>
+																<TextBlock Text="Clear"/>
+															</Grid>
+														</Button>
+													</StackPanel>
+												</WrapPanel>
+											</StackPanel>
+											<DockPanel DockPanel.Dock="Bottom" Height="24">
+												<StatusBar Background="AliceBlue">
+													<StatusBarItem HorizontalAlignment="Left">
+														<StackPanel Orientation="Horizontal">
+															<Image Source="/Resources/folder.png" Margin="0,0,3,0"/>
+															<TextBlock x:Name="Stb_Middle" Text="List Not Initialized" FontWeight="Normal"/>
+														</StackPanel>
+													</StatusBarItem>
+													<StatusBarItem HorizontalAlignment="Center">
+														<Separator />
+													</StatusBarItem>
+													<StatusBarItem HorizontalAlignment="Right">
+														<StackPanel Orientation="Horizontal">
+															<Image Source="/Resources/image.png" Margin="0,0,3,0"/>
+															<TextBlock x:Name="Stb_Right" Text="No File Selected" FontWeight="Normal"/>
+														</StackPanel>
+													</StatusBarItem>
+												</StatusBar>
+											</DockPanel>
+											<DataGrid x:Name="ListFiles" AutoGenerateColumns="False" SelectionMode="Extended" SelectionUnit="FullRow" GridLinesVisibility="All" ToolTip="DoubleClick:TestSingleImage; RightClick:ShowInExplorer.&#xA;Control+A: Select All; Shift Click: Add all items in-between; Control Click: Add/remove this item to selection." SelectionChanged="List_SelectionChanged" MouseRightButtonUp="List_PopExplorer"  IsReadOnly="True" IsTextSearchEnabled="True" Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" ItemsSource="{Binding FileList, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+												<!--AllowDrop="True" Drop="List_Drop" PreviewDragOver="List_pDrop"-->
+												<DataGrid.RowStyle>
+													<Style TargetType="{x:Type DataGridRow}">
+														<EventSetter Event="Control.MouseDoubleClick" Handler="btn_SingleTest_Click"/>
+													</Style>
+												</DataGrid.RowStyle>
+												<DataGrid.Columns>
+													<DataGridTextColumn Header="FileName" Width="160" Binding="{Binding FileName}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="{x:Type DataGridCell}">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+													<DataGridTextColumn Header="Group" Width="60" Binding="{Binding Group}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="DataGridCell">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+													<DataGridTextColumn Header="Individual" Width="60" Binding="{Binding Individual}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="DataGridCell">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+													<DataGridTextColumn Header="FileType" Width="60" Binding="{Binding FileType}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="DataGridCell">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+													<DataGridTextColumn Header="Width" Width="60" Binding="{Binding Width}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="DataGridCell">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+													<DataGridTextColumn Header="Height" Width="60" Binding="{Binding Height}">
+														<DataGridTextColumn.CellStyle>
+															<Style TargetType="DataGridCell">
+																<Setter Property="Foreground" Value="{Binding DisplayColor}"/>
+															</Style>
+														</DataGridTextColumn.CellStyle>
+													</DataGridTextColumn>
+												</DataGrid.Columns>
+											</DataGrid>
+										</DockPanel>
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+
+						<avalonDock:LayoutAnchorablePane DockHeight="*">
+							<avalonDock:LayoutAnchorable Title="Control Panel" CanClose="False" CanHide="False" ContentId="controlpanel">
+								<Border>
+									<Border.Background>
+										<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+									</Border.Background>
+									<DockPanel LastChildFill="True" Margin="1,2,1,2">
+										<Grid DockPanel.Dock="Bottom">
+											<ProgressBar x:Name="progressBar1" Value="{Binding ProgressPercent, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Height="20" Margin="1,2,1,2"/>
+											<TextBlock x:Name="txt_progressBar1" Text="{Binding Status, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+										</Grid>
+										<DockPanel LastChildFill="True">
+											<StackPanel DockPanel.Dock="Right" Width="150">
+												<WrapPanel>
+													<Button Click="btn_ThresholdTest_Click" ToolTip="Shortcut Key: Control + T" Focusable="True">
+														<Grid>
+															<Image Source="Resources/simplicio/player_pause.png"/>
+															<TextBlock><Underline>T</Underline>hreshold</TextBlock>
+														</Grid>
+													</Button>
+													<Button Click="btn_SingleTest_Click" ToolTip="Shortcut Key: Control + S" Focusable="True">
+														<Grid>
+															<Image Source="Resources/simplicio/player_play.png"/>
+															<TextBlock><Underline>S</Underline>ingle Test</TextBlock>
+														</Grid>
+													</Button>
+													<Button x:Name="btn_StartBatch" Click="btn_StartBatch_Click" Focusable="True">
+														<Grid>
+															<Image Source="Resources/simplicio/player_fastforward.png"/>
+															<TextBlock>Start <Underline>B</Underline>atch</TextBlock>
+														</Grid>
+													</Button>
+													<Button x:Name="btn_StopBatch" IsEnabled="False" Click="btn_StopBatch_Click" Focusable="True">
+														<Grid>
+															<Image Source="Resources/simplicio/player_stop.png"/>
+															<TextBlock Text="Stop Batch"/>
+														</Grid>
+													</Button>
+												</WrapPanel>
+											</StackPanel>
+											<StackPanel>
+												<WrapPanel Margin="0,2">
+													<CheckBox x:Name="Analysis_MultiThread" Margin="3,4,8,2" ToolTip="Maximize the performance by using all available processors. View panels will not refresh when this is enabled." IsChecked="{Binding MultiThreadingSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">MultiThreading</CheckBox>
+                                                    <CheckBox x:Name="Analysis_ExportDetail" Margin="3,4,8,2" ToolTip="When batch processing images, resulting images will be exported at full resolution if checked. By default, images will be exported at half resolution in one single file." IsChecked="{Binding ExportDetailSwitch, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">Export Full-Res</CheckBox>
+												</WrapPanel>
+												<!--<RadioButton Margin="0" Visibility="Hidden"/>-->
+												<!--<RadioButton x:Name="Analysis_TIFtoJPG" IsEnabled="{Binding PerformConversionIsEnabled, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Content="Image Conversion (tif -> jpg)"/>
+												<RadioButton x:Name="Analysis_LightenBG" IsEnabled="{Binding ListSizeSwitch, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}" Content="Calculate Background" ToolTip="Image Size filter needs to be checked to enable this."/>-->
+												<RadioButton x:Name="Analysis_ColorCellCount" IsChecked="{Binding PerformColorCellCounting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="Colored Cell Counting" Visibility="Hidden"/>
+												<!-- Tooltips="Image Size filter needs to be checked to enable this." IsEnabled="{Binding ListSizeSwitch, Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"-->
+												<RadioButton x:Name="Analysis_LMAP" IsChecked="{Binding PerformAirspaceProfiling, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="LM Airspace Profiling &amp; Quantification"/>
+												<RadioButton x:Name="Analysis_LMAQ" IsChecked="{Binding PerformAirspaceQuantification, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="LM Airspace Custom Quantification"/>
+												<RadioButton x:Name="Analysis_LMGC" IsChecked="{Binding PerformGridlineCounting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Content="LM Gridline Counting" Visibility="Hidden"/>
+												<RadioButton x:Name="Analysis_LMTP" IsChecked="{Binding PerformTissueProfiling, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Content="LM Tissue Profiling" Visibility="Hidden"/>
+											</StackPanel>
+										</DockPanel>
+									</DockPanel>
+								</Border>
+							</avalonDock:LayoutAnchorable>
+						</avalonDock:LayoutAnchorablePane>
+
+					</avalonDock:LayoutAnchorablePaneGroup>
+
+					<avalonDock:LayoutAnchorablePaneGroup Orientation="Vertical" DockWidth="*">
+						<avalonDock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="0.9*">
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="Graph #1" CanClose="False" CanHide="False" ContentId="graph1">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<op:PlotView x:Name="Graph1" Model="{Binding Graph1, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+								<avalonDock:LayoutAnchorable Title="Graph #2" CanClose="False" CanHide="False" ContentId="graph2">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<op:PlotView x:Name="Graph2" Model="{Binding Graph2, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>								
+							</avalonDock:LayoutAnchorablePane>
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="Graph #3" CanClose="False" CanHide="False" ContentId="graph3">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<op:PlotView x:Name="Graph3" Model="{Binding Graph3, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+						<avalonDock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="*">
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #1" CanClose="False" CanHide="False" ContentId="view1">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image1" ImageSource="{Binding ImageSource1, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #2" CanClose="False" CanHide="False" ContentId="view2">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image2" ImageSource="{Binding ImageSource2, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+						<avalonDock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="*">
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #3" CanClose="False" CanHide="False" ContentId="view3">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image3" ImageSource="{Binding ImageSource3, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #4" CanClose="False" CanHide="False" ContentId="view4">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image4" ImageSource="{Binding ImageSource4, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+						<avalonDock:LayoutAnchorablePaneGroup Orientation="Horizontal" DockHeight="*">
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #5" CanClose="False" CanHide="False" ContentId="view5">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image5" ImageSource="{Binding ImageSource5, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="View #6" CanClose="False" CanHide="False" ContentId="view6">
+									<Border Background="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}">
+										<local:MagnifyImageViewer x:Name="Image6" ImageSource="{Binding ImageSource6, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+						<avalonDock:LayoutAnchorablePaneGroup>
+							<avalonDock:LayoutAnchorablePane>
+								<avalonDock:LayoutAnchorable Title="Scroll Viewer" CanClose="False" CanHide="False" ContentId="scrollviewer" x:Name="scrollviewerpane">
+									<Border>
+										<Border.Background>
+											<SolidColorBrush Color="AliceBlue" Opacity="0.7"/>
+										</Border.Background>
+										<DockPanel LastChildFill="True">
+											<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+												<ComboBox x:Name="cmb_SV" DockPanel.Dock="Left" VerticalContentAlignment="Center" Width="200" SelectedIndex="{Binding ScrollViewerIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+													<ComboBoxItem IsSelected="True">Not Selected</ComboBoxItem>
+													<ComboBoxItem>1 - Original</ComboBoxItem>
+													<ComboBoxItem>2 - Markup</ComboBoxItem>
+													<ComboBoxItem>3 - Excluded</ComboBoxItem>
+													<ComboBoxItem>4 - Gray</ComboBoxItem>
+													<ComboBoxItem>5 - Pure B/W</ComboBoxItem>
+													<ComboBoxItem>6 - Result</ComboBoxItem>
+												</ComboBox>
+											</StackPanel>
+											<local:ScrollViewer x:Name="myScrollViewer" ImageSource="{Binding ImageSourceX, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" />
+										</DockPanel>
+									</Border>
+								</avalonDock:LayoutAnchorable>
+							</avalonDock:LayoutAnchorablePane>
+						</avalonDock:LayoutAnchorablePaneGroup>
+					</avalonDock:LayoutAnchorablePaneGroup>
+				</avalonDock:LayoutPanel>
+			</avalonDock:LayoutRoot>
+		</avalonDock:DockingManager>
+
+		<StatusBar Grid.Row="2" MouseUp="OpenHomePage">
+			<StatusBarItem>
+				<StackPanel Orientation="Horizontal">
+					<TextBlock Text="  "/>
+					<Image Source="/Resources/programmer.png"/>
+					<TextBlock Text=" Rui Xiao, PhD.   "/>
+					<Image Source="/Resources/email.png"/>
+					<TextBlock Text=" ruixiao85@gmail.com  "/>
+					<Image Source="/Resources/www_icon.png"/>
+					<TextBlock Text=" ruixiao85.net   "/>
+				</StackPanel>
+			</StatusBarItem>
+		</StatusBar>
+
+		<!--<StatusBar Grid.Row="2">
+						<StatusBar.ItemsPanel>
+								<ItemsPanelTemplate>
+										<Grid>
+												<Grid.RowDefinitions>
+														<RowDefinition Height="*"/>
+												</Grid.RowDefinitions>
+												<Grid.ColumnDefinitions>
+														<ColumnDefinition Width="*"/>
+														<ColumnDefinition Width="Auto"/>
+														<ColumnDefinition Width="*"/>
+														<ColumnDefinition Width="Auto"/>
+														<ColumnDefinition Width="*"/>
+												</Grid.ColumnDefinitions>
+										</Grid>
+								</ItemsPanelTemplate>
+						</StatusBar.ItemsPanel>
+						<StatusBarItem>
+								<StackPanel Orientation="Horizontal">
+										<TextBlock Text="  "/>
+										<Image Source="/Resources/programmer.png"/>
+										<TextBlock Text=" Rui Xiao, PhD.   "/>
+										<Image Source="/Resources/email.png"/>
+										<TextBlock Text=" ruixiao85@gmail.com   "/>
+								</StackPanel>
+						</StatusBarItem>
+						<Separator Grid.Column="1"/>
+						<Separator Grid.Column="3"/>
+				</StatusBar>-->
+
+
+	</Grid>
+</Window>
