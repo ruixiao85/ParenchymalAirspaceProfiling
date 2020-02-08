@@ -2,3 +2,7 @@ bin/
 obj/
 db.lock
 storage.*
+/lib
+/Properties
+/LicenseVerify.cer
+/.vs/PAP/v16/.suo
